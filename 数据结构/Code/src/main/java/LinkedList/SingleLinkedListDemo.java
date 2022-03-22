@@ -95,7 +95,24 @@ class SingleLinkedList {
         }
         System.out.println("更新失败");
     }
-
+    public void delete(Node node){
+        this.delete(node.order);
+    }
+    public void delete(int order){
+        if (order ==0 ){
+            System.out.println("头结点不能删除");
+        }
+        Node tempNode = head;
+        while (tempNode.next != null) {
+            if (tempNode.next.order == order) {
+                tempNode.next =tempNode.next.next;
+                System.out.println("删除成功");
+                return;
+            }
+            tempNode=tempNode.next;
+        }
+        System.out.println("删除失败，当前编号不存在"+order);
+    }
 }
 
 /**
