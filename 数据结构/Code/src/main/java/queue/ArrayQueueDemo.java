@@ -1,6 +1,4 @@
-package Queue;
-
-import java.awt.print.Printable;
+package queue;
 
 /**
  * @author chenpc

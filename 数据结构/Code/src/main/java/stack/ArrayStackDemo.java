@@ -1,4 +1,4 @@
-package Stack;
+package stack;
 
 /**
  * 使用数组模拟栈
