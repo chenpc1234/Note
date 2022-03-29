@@ -3,7 +3,7 @@ package sort;
 import java.util.Arrays;
 
 /**
- * 基数排序，桶排序
+ * 基数排序
  * @author chenpc
  * @version 1.0
  * @since 2022/3/29/03/29  10:32
