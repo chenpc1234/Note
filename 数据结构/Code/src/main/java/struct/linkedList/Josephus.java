@@ -1,4 +1,4 @@
-package linkedList;
+package struct.linkedList;
 
 /**
  * @author chenpc

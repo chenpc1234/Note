@@ -1,7 +1,5 @@
-package sort;
+package algorithm.sort;
 
-import javax.sound.midi.Soundbank;
-import java.time.temporal.Temporal;
 import java.util.Arrays;
 
 /**

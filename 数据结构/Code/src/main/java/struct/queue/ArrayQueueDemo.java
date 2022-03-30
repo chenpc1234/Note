@@ -1,4 +1,4 @@
-package queue;
+package struct.queue;
 
 /**
  * @author chenpc

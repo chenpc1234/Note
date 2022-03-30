@@ -1,4 +1,4 @@
-package stack;
+package struct.stack;
 
 /**
  * 使用数组模拟栈
