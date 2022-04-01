@@ -16,8 +16,8 @@ public class HashTableDemo {
         hashTab.add(new Emp(5, "5"));
         hashTab.add(new Emp(6, "6"));
         hashTab.list();
-        Emp emp = hashTab.find(5);
-        System.out.println(emp);
+    //    Emp emp = hashTab.find(5);
+      //  System.out.println(emp);
     }
 }
 
@@ -63,8 +63,10 @@ class EmpLinkedList{
             System.out.println("第"+no+"条链表为空");
         }
         Emp temp = head;
-        while (temp.next!=null){
-            System.out.print(temp.next+"\t");
+        System.out.print("第"+no+"条链表为");
+        while (temp!=null){
+            System.out.print(temp+"\t");
+            temp = temp.next;
         }
     }
 
