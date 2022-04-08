@@ -1,13 +1,5 @@
 
 *.class
-/.idea
+*\.idea
 *.iml
-*.iml
-数据结构/Code/.idea/workspace.xml
-数据结构/Code/.idea/vcs.xml
-数据结构/Code/.idea/modules.xml
-数据结构/Code/.idea/misc.xml
-数据结构/Code/.idea/jarRepositories.xml
-数据结构/Code/.idea/inspectionProfiles/Project_Default.xml
-数据结构/Code/.idea/compiler.xml
 数据结构/Code/Code.iml
