@@ -13,7 +13,7 @@ public class HeapSort {
         sort(a);
     }
 
-    public static void sort(int[] a) {
+    public static int[]  sort(int[] a) {
         System.out.println("堆排序");
         int max;
         for (int i = a.length / 2 - 1; i >= 0; i--) {
@@ -30,6 +30,7 @@ public class HeapSort {
             adjustHeap(a, 0, j);
         }
         System.out.println(Arrays.toString(a));
+        return a;
     }
 
     /**

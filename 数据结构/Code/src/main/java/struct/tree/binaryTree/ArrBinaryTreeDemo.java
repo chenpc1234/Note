@@ -1,4 +1,4 @@
-package struct.tree;
+package struct.tree.binaryTree;
 
 /**
  * @author chenpc
