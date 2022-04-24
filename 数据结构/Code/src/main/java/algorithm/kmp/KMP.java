@@ -14,9 +14,9 @@ public class KMP {
 
     private static int[] next(char[] chars) {
         int[] next =new int[chars.length];
-        for (int i = 0; i < chars.length; i++) {
-
-            //next[i] =
+        next[0] = 0;
+        for (int i = 1; i < chars.length; i++) {
+            next[i] = a
         }
         return next;
     }
