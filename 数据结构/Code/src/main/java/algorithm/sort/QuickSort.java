@@ -3,6 +3,7 @@ package algorithm.sort;
 import java.util.Arrays;
 
 /**
+ * 快速排序
  * @author chenpc
  * @version 1.0
  * @since 2022/3/27/03/27  21:35
