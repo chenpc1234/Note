@@ -12,7 +12,7 @@
 4. 没有代码生成，也不需要XML配置。
 5. 避免大量的 Maven 导入和各种版本冲突。
 
-## SpringBoot相关注解
+## 相关注解
 
 - @SpringBootApplication
   - @SpringBootConfiguration：组合了 @Configuration 注解，实现配置文件的功能。
@@ -50,9 +50,9 @@
   - @RequestParam  请求参数
   - @RequestBody  请求体
   - @PathVariable
-  - 
+  - 。。。
 
-## Spring配置文件加载顺序
+## 配置文件加载顺序
 
 **bootstrap的配置文件优先加载**
 
@@ -74,7 +74,7 @@ application配置
     2、如果同一个配置属性，在多个配置文件都配置了，默认使用第1个读取到的，后面读取的不覆盖前面读取到的。
     
     3、创建SpringBoot项目时，一般的配置文件放置在“项目的resources目录下”
-## Spring自动配置原理
+## 自动配置原理
 
 **xxxxxAutoConfiguration ---> 组件  --->** **xxxxProperties里面拿值  ----> application.properties**
 
@@ -117,8 +117,6 @@ application配置
 
 - - 用户直接自己@Bean替换底层的组件
   - 用户去看这个组件是获取的配置文件什么值就去修改。
-
-# Spring请求
 
 ## 静态资源
 
@@ -262,7 +260,11 @@ public Map carsSell(
    2. name在转发的方法可以使用requestAttribute 获取
        @RequestAttribute("msg") String msg
 
-# Spring处理
+## 请求处理流程图解
+
+![处理流程](SpringBoot.assets/SpringBoot.png)
+
+[Spring流程思维导图]: SpringBoot.assets/SpringMCV.xmind
 
 ## 拦截器
 
@@ -389,7 +391,6 @@ public void afterCompletion(HttpServletRequest request, HttpServletResponse resp
 	  }
 	  ```
 	
-	  
 
 ## 异常处理
 
@@ -404,9 +405,9 @@ public void afterCompletion(HttpServletRequest request, HttpServletResponse resp
 
 ### 自定义异常处理
 
+// todo
 
-
-## 添加原生组件（servlet、filter、listener）
+## 添加过滤器/监听/服务
 
 **step1： 主配置类添加ServletComponentScan** 
 
@@ -498,7 +499,7 @@ public class MyServlet  extends HttpServlet {
    }
 ```
 
-## 数据层整合
+## 整合数据层
 
 ### 整合JDBC
 
@@ -728,10 +729,4 @@ public class MyServlet  extends HttpServlet {
 
 3. 使用
    	使用StringRedisTemplate 或者 redisTemplate
-
-# SpringMVC请求处理流程
-
-![处理流程](SpringBoot.assets/SpringBoot.png)
-
-[Spring流程思维导图]: SpringBoot.assets/SpringMCV.xmind
 

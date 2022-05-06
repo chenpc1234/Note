@@ -64,7 +64,7 @@ sudo systemctl restart docker
 sudo systemctl enable docker
 ```
 
-## 概念
+## 核心
 
 ### 镜像（image）
 
