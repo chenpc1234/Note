@@ -214,7 +214,7 @@ set profiling=on;
   ```
 - 查看结果 show profiles; 
   
-  ![截图](2531d365d5b1ac9eaa9710009c49991a.png)
+  ![截图](mysql性能分析(Explain+slowquery+showprofile).assets/2531d365d5b1ac9eaa9710009c49991a.png)
 - 诊断SQL
   ```sql
    --查看 SQL 语句执行的具体流程以及每个步骤花费的时间
@@ -231,7 +231,7 @@ set profiling=on;
   SWAPS：显示交换次数相关开销的信息
   ```
 
-![截图](cb684980b2588a4e3450bbb88e408d27.png)
+![截图](mysql性能分析(Explain+slowquery+showprofile).assets/cb684980b2588a4e3450bbb88e408d27.png)
 
 - **重点关注！！！！**
 

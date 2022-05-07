@@ -99,7 +99,7 @@ idx(col1,col2,col3,col4) ;
 
 <br/>
 
-![截图](91066d48c8006364a316d756ea1db3b7.png)
+![截图](mysql优化(索引+查询+排序+分组).assets/91066d48c8006364a316d756ea1db3b7.png)
 
 <br/>
 
