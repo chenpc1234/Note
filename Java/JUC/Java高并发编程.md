@@ -181,8 +181,8 @@ CAS不加锁，保证一次性，但是需要多次比较
 	当对一个共享变量执行操作时，我们可以通过循环CAS的方式来保证原子操作
 	但是对于多个共享变量操作时，循环CAS就无法保证操作的原子性，这个时候只能用锁来保证原子性
 3. ABA问题
-  CAS只管开头和结尾，也就是头和尾是一样，那就修改成功，中间的这个过程，可能会被人修改过
-  若 value 由 100 变成了1000，又变回了100 ，compare 100 没有问题就swap了。
+    CAS只管开头和结尾，也就是头和尾是一样，那就修改成功，中间的这个过程，可能会被人修改过
+    若 value 由 100 变成了1000，又变回了100 ，compare 100 没有问题就swap了。
 
 # ABA问题
 
@@ -356,6 +356,8 @@ jdk1.8 会产生数据覆盖问题
 
 2、使用 ConcurrentHashMap
 
+### ConcurrentHashMap
+
 # 锁
 
 ## 公平锁/非公平锁
@@ -383,14 +385,17 @@ new ReentrantLock(false) 非公平锁
 
 ## 悲观锁/乐观锁
 
-悲观锁：
-	1. 悲观 。悲观锁认为其他线程会去抢占，每次拿数据都会上锁，防止别人拿，其他线程阻塞。数据使用完成会释放锁，其他线程可以去拿到锁进行操作。
-	2. 比如 。RDBMS的行锁、表锁等   ；读写锁，独占锁（java synchonized / reentrantlock）
-乐观锁：
-	1. 乐观 。 乐观锁认为其他线程不会抢占，每次拿数据不上锁，其他线程可以同时拿到。更新数据时会比较是否和之前一致，一致就提交不一致就重新执行
+### 悲观锁：
+
+1. 悲观 。悲观锁认为其他线程会去抢占，每次拿数据都会上锁，防止别人拿，其他线程阻塞。数据使用完成会释放锁，其他线程可以去拿到锁进行操作。
+2. 比如 。RDBMS的行锁、表锁等   ；读写锁，独占锁（java synchonized / reentrantlock）
+
+### 乐观锁：
+
+​			乐观锁认为其他线程不会抢占，每次拿数据不上锁，其他线程可以同时拿到。更新数据时会比较是否和之前一致，一致就提交不一致就重新执行。
  	2. 如何比较   
-		2.1 版本号。 添加一个版本号，得到锁的时候也得到版本号，修改时版本号+1  ，提交时查看当前版本号是否与获取到的版本号一致。一致就提交，不一致就循环 retry
-		2.2 CAS  compare and swap 比较并交换。
+​		2.1 版本号。 添加一个版本号，得到锁的时候也得到版本号，修改时版本号+1  ，提交时查看当前版本号是否与获取到的版本号一致。一致就提交，不一致就循环 retry
+​		2.2 CAS  compare and swap 比较并交换。
 
 ## 共享锁/独占锁
 
@@ -412,61 +417,58 @@ new ReentrantLock(false) 非公平锁
 
 可重入锁就是递归锁
 
-指的是同一线程外层函数获得锁之后，内层递归函数仍然能获取到该锁的代码，在同一线程在外层方法获取锁的时候，在进入内层方法会自动获取锁
-可重入锁的最大作用就是避免死锁
+​		指的是同一线程外层函数获得锁之后，内层递归函数仍然能获取到该锁的代码，在同一线程在外层方法获取锁的时候，在进入内层方法会自动获取锁
+**可重入锁的最大作用就是避免死锁**
 
 ## 自旋锁
 
-自旋锁：spinlock，是指尝试获取锁的线程不会立即阻塞，而是采用循环的方式去尝试获取锁，这样的
+​		自旋锁：spinlock，是指尝试获取锁的线程不会立即阻塞，而是采用循环的方式去尝试获取锁。
 
-好处是减少线程上下文切换的消耗，缺点是循环会消耗CPU
+- **优点**：循环比较获取直到成功为止，没有类似于wait的阻塞，减少线程上下文切换的消耗，
 
-原来提到的比较并交换，底层使用的就是自旋，自旋就是多次尝试，多次访问，不会阻塞的状态就是自旋
-
-### 优缺点
-
-优点：循环比较获取直到成功为止，没有类似于wait的阻塞
-
-缺点：当不断自旋的线程越来越多的时候，会因为执行while循环不断的消耗CPU资源
+- **缺点**：当不断自旋的线程越来越多的时候，会因为执行while循环不断的消耗CPU资源
 
 ## Synchronize和Lock
 
 synchronized 和 lock 有什么区别？用新的lock有什么好处？
-1） 层面不同 一个jvm层面 、一个api层面
-- synchronized属于JVM层面，属于java的关键字
-- Lock是具体类（java.util.concurrent.locks.Lock）是api层面的锁
 
-2）使用方法：
-- synchronized：不需要用户去手动释放锁，当synchronized代码执行后，系统会自动让线程释放对锁的占用
-- ReentrantLock：则需要用户去手动释放锁，若没有主动释放锁，就有可能出现死锁的现象，需要lock() 和 unlock() 配置try catch语句来完成
+1. 层面不同 一个jvm层面 、一个api层面
 
-3）等待是否中断
+   - synchronized   属于JVM层面，属于java的关键字
+   - Lock是具体类（java.util.concurrent.locks.Lock）是api层面的锁
 
-- synchronized：不可中断，除非抛出异常或者正常运行完成
-- ReentrantLock：可中断，可以设置超时方法
-  - 设置超时方法，trylock(long timeout, TimeUnit unit)
-  - lockInterrupible() 放代码块中，调用interrupt() 方法可以中断
+2. 使用方法：
 
-4）加锁是否公平
+   - synchronized：不需要用户去手动释放锁，当synchronized代码执行后，系统会自动让线程释放对锁的占用
+   - ReentrantLock：则需要用户去手动释放锁，若没有主动释放锁，就有可能出现死锁的现象，需要lock() 和 unlock() 配置try catch语句来完成
 
-- synchronized：非公平锁
-- ReentrantLock：默认非公平锁，构造函数可以传递boolean值，true为公平锁，false为非公平锁
+3. 等待是否中断
 
-5）锁绑定多个条件Condition
+   - synchronized：不可中断，除非抛出异常或者正常运行完成
+   - ReentrantLock：可中断，可以设置超时方法
+     - 设置超时方法，trylock(long timeout, TimeUnit unit)
+     - lockInterrupible() 放代码块中，调用interrupt() 方法可以中断
 
-- synchronized：没有，要么随机，要么全部唤醒
-- ReentrantLock：用来实现分组唤醒需要唤醒的线程，可以精确唤醒，而不是像synchronized那样，要么随机，要么全部唤醒
+4. 加锁是否公平
+
+   - synchronized：非公平锁
+
+   - ReentrantLock：默认非公平锁，构造函数可以传递boolean值，true为公平锁，false为非公平锁
+
+5. 锁绑定多个条件Condition
+
+   - synchronized：没有，要么随机，要么全部唤醒
+   - ReentrantLock：用来实现分组唤醒需要唤醒的线程，可以精确唤醒，而不是像synchronized那样，要么随机，要么全部唤醒
 
 # 多线程工具类
 
-## CountDownLatch
+## CountDownLatch  计数器
 
-CountDownLatch  计数器
+​		让一些线程阻塞直到另一些线程完成一系列操作才被唤醒
 
-让一些线程阻塞直到另一些线程完成一系列操作才被唤醒
+​		CountDownLatch主要有两个方法，当一个或多个线程调用await方法时，调用线程就会被阻塞。其它线程调用CountDown方法会将计数器减1（调用CountDown方法的线程不会被阻塞），当计数器的值变成零时，因调用await方法被阻塞的线程会被唤醒，继续执行
 
-CountDownLatch主要有两个方法，当一个或多个线程调用await方法时，调用线程就会被阻塞。其它线程调用CountDown方法会将计数器减1（调用CountDown方法的线程不会被阻塞），当计数器的值变成零时，因调用await方法被阻塞的线程会被唤醒，继续执行
-
+```java
 CountDownLatch countDownLatch = new CountDownLatch(6);
 for (int i = 0; i <= 6; i++) {
     new Thread(() -> {
@@ -479,93 +481,83 @@ for (int i = 0; i <= 6; i++) {
 countDownLatch.await();
 
 System.out.println(Thread.currentThread().getName() + "\t 班长最后关门");
+```
 
-## CyclicBarrier
+## CyclicBarrier 循环栅栏
 
-和CountDownLatch相反。也就是做加法，开始是0，加到某个值的时候就执行
-
-CyclicBarrier的字面意思就是可循环（cyclic）使用的屏障（Barrier）。
+​		CyclicBarrier的字面意思就是可循环（cyclic）使用的屏障（Barrier）。
 它要求做的事情是，让一组线程到达一个屏障（也可以叫同步点）时被阻塞，直到最后一个线程到达屏障时，屏障才会开门，所有被屏障拦截的线程才会继续干活，线程进入屏障通过CyclicBarrier的await方法
 
 
+```java
 /**
  * CyclicBarrier循环屏障
- *
- * @author: 陌溪
- * @create: 2020-03-16-14:40
  */
 public class CyclicBarrierDemo {
+	public static void main(String[] args) {
+    /**
+     * 定义一个循环屏障，参数1：需要累加的值，参数2 需要执行的方法
+     */
+    CyclicBarrier cyclicBarrier = new CyclicBarrier(7, () -> {
+        System.out.println("召唤神龙");
+    });
 
+    for (int i = 0; i < 7; i++) {
+        final Integer tempInt = i;
+        new Thread(() -> {
+            System.out.println(Thread.currentThread().getName() + "\t 收集到 第" + tempInt + "颗龙珠");
 
-    public static void main(String[] args) {
-        /**
-         * 定义一个循环屏障，参数1：需要累加的值，参数2 需要执行的方法
-         */
-        CyclicBarrier cyclicBarrier = new CyclicBarrier(7, () -> {
-            System.out.println("召唤神龙");
-        });
-    
-        for (int i = 0; i < 7; i++) {
-            final Integer tempInt = i;
-            new Thread(() -> {
-                System.out.println(Thread.currentThread().getName() + "\t 收集到 第" + tempInt + "颗龙珠");
-    
-                try {
-                    // 先到的被阻塞，等全部线程完成后，才能执行方法
-                    cyclicBarrier.await();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                } catch (BrokenBarrierException e) {
-                    e.printStackTrace();
-                }
-            }, String.valueOf(i)).start();
-        }
+            try {
+                // 先到的被阻塞，等全部线程完成后，才能执行方法
+                cyclicBarrier.await();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } catch (BrokenBarrierException e) {
+                e.printStackTrace();
+            }
+        }, String.valueOf(i)).start();
     }
-## Semaphore
-
-Semaphore：信号量
-
-概念s
+}
+```
+## Semaphore 信号量
 
 信号量主要用于两个目的
 
 - 一个是用于共享资源的互斥使用
 - 另一个用于并发线程数的控制
-acquire  得到资源
-release  释放资源
 
-/**
- * 信号量Demo
- * @author: 陌溪
- * @create: 2020-03-16-15:01
- */
+**两个方法**
+
+1. acquire  得到资源
+2. release  释放资源
+
+```java
 public class SemaphoreDemo {
 
-    public static void main(String[] args) {
-
+	public static void main(String[] args) {
         /**
          * 初始化一个信号量为3，默认是false 非公平锁， 模拟3个停车位
          */
         Semaphore semaphore = new Semaphore(3, false);
-    
+
         // 模拟6部车
         for (int i = 0; i < 6; i++) {
             new Thread(() -> {
                 try {
                     // 代表一辆车，已经占用了该车位
                     semaphore.acquire(); // 抢占
-    
+
                     System.out.println(Thread.currentThread().getName() + "\t 抢到车位");
-    
+
                     // 每个车停3秒
                     try {
                         TimeUnit.SECONDS.sleep(3);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
-    
+
                     System.out.println(Thread.currentThread().getName() + "\t 离开车位");
-    
+
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 } finally {
@@ -576,100 +568,104 @@ public class SemaphoreDemo {
         }
     }
 }
+```
+
 
 # 阻塞队列
 
-### 阻塞队列
+## 概念
 
-BlockingQueue   阻塞队列，排队拥堵，首先它是一个队列，而一个阻塞队列在数据结构中所起的作用大致如下图所示：
+​		BlockingQueue   阻塞队列，排队拥堵，首先它是一个队列，而一个阻塞队列在数据结构中所起的作用大致如下图所示：
 
- 
+​		阻塞队列：好处是我们不需要关心什么时候需要阻塞线程，什么时候需要唤醒线程
+
+![	](Java高并发编程.assets/image-20220509102259806.png) 
 
 线程1往阻塞队列中添加元素，而线程2从阻塞队列中移除元素
 
 - `当阻塞队列是空时，从队列中获取元素的操作将会被阻塞`
   - 当蛋糕店的柜子空的时候，无法从柜子里面获取蛋糕
-
+- 试图从空的阻塞队列中获取元素的线程将会被阻塞，直到其它线程往空的队列插入新的元素
+  
 - `当阻塞队列是满时，从队列中添加元素的操作将会被阻塞`
   - 当蛋糕店的柜子满的时候，无法继续向柜子里面添加蛋糕了
+  - 试图往已经满的阻塞队列中添加新元素的线程，直到其它线程往满的队列中移除一个或多个元素，或者完全清空队列后，使队列重新变得空闲起来，并后续新增
 
-也就是说 试图从空的阻塞队列中获取元素的线程将会被阻塞，直到其它线程往空的队列插入新的元素
+## 相关实现类
 
-同理，试图往已经满的阻塞队列中添加新元素的线程，直到其它线程往满的队列中移除一个或多个元素，或者完全清空队列后，使队列重新变得空闲起来，并后续新增
-
-
-BlockingQueue阻塞队列是属于一个接口，底下有七个实现类
-分类
 - ArrayBlockQueue：由数组结构组成的有界阻塞队列
 - LinkedBlockingQueue：由链表结构组成的有界（但是默认大小 Integer.MAX_VALUE）的阻塞队列
 - PriorityBlockQueue：支持优先级排序的无界阻塞队列
 - DelayQueue：使用优先级队列实现的延迟无界阻塞队列
 - SynchronousQueue：不存储元素的阻塞队列，也即单个元素的队列
+  - SynchronousQueue没有容量，与其他BlockingQueue不同，
+  - SynchronousQueue是一个不存储的BlockingQueue，每一个put操作必须等待一个take操作，否者不能继续添加元素
 - LinkedTransferQueue：由链表结构组成的无界阻塞队列
 - LinkedBlockingDeque：由链表结构组成的双向阻塞队列
 
+## 相关API
 
-阻塞队列：好处是我们不需要关心什么时候需要阻塞线程，什么时候需要唤醒线程
+### 插入
 
-方法：
-插入
-add(element )              添加元素 ， 成功true    队列满了出异常 IIIegalStateException：Queue full  
-offer(element ）        添加元素，  成功 true  队列满了 false
-offer(element ，time，unit）     添加元素 ，成功true，队列满了阻塞线程 一段时间，若这段时间还无法插入，就返回false
-put(element ）   	添加元素，成功 true  队列满了继续等待
-移除
-remove()	     移除元素 成功返回元素， 队列为空抛出异常java.util.NoSuchElementException
-poll() 		     移除元素 成功返回元素， 队列为空 返回NULL
-poll(time，unit）  移除元素  成功返回元素， 队列为空  等待 一段时间，若还获取不到值 返回NULL
-take()                      移除元素  成功返回元素， 队列为空  一直等待
-检查
-element            获取当前元素 但是不会移除   队列为空获取就会报错java.util.NoSuchElementException
-peek		获取当前元素 但是不会移除   队列为空 返回NULL
+- add(element )              添加元素 ， 成功true    队列满了出异常 IIIegalStateException：Queue full  
+- offer(element ）          添加元素，  成功 true  队列满了 false
+- offer(element ，time，unit）     添加元素 ，成功true，队列满了阻塞线程 一段时间，若这段时间还无法插入，就返回false
+- put(element ）   	       添加元素，成功 true  队列满了继续等待
 
+### 移除
 
+- remove()	     移除元素 成功返回元素， 队列为空抛出异常java.util.NoSuchElementException
+- poll() 		        移除元素 成功返回元素， 队列为空 返回NULL
+- poll(time，unit）  移除元素  成功返回元素， 队列为空  等待 一段时间，若还获取不到值 返回NULL
+- take()                      移除元素  成功返回元素， 队列为空  一直等待
 
+### 检查
 
-
-SynchronousQueue没有容量，与其他BlockingQueue不同，
-SynchronousQueue是一个不存储的BlockingQueue，每一个put操作必须等待一个take操作，否者不能继续添加元素欧西安
+- element            获取当前元素 但是不会移除   队列为空获取就会报错java.util.NoSuchElementException
+- peek		          获取当前元素 但是不会移除   队列为空 返回NULL
 
 # 多线程
 
 ## 获取多线程的方法
 
-1、继承Thread 类
-2、实现runable 接口 重写run方法
-class MyThread implements Runnable {
+1. 继承Thread 类
 
-    @Override
-    public void run() {
-        System.out.println("MyThread run ---------");
-    }
-}
+2. 实现runable 接口 重写run方法
 
-Thread t1 = new Thread(new MyThread());
-t1.start();
-3、实现Callable  接口 重写call方法
-class MyThread2 implements Callable<String> {
-    @Override
-    public String call() throws Exception {
-        System.out.println("MyThread2 run --------");
-        return "2000";
-    }
-}
-//FutureTask类，他实现了Runnable接口，并且还需要传递一个实现Callable接口的类作为构造函数
-FutureTask futureTask = new FutureTask(new MyThread2());
-Thread t2 = new Thread(futureTask, "t2");
-t2.start();
+   ```java
+   class MyThread implements Runnable {
+       @Override
+       public void run() {
+           System.out.println("MyThread run ---------");
+       }
+   }
+   Thread t1 = new Thread(new MyThread());
+   t1.start();
+   ```
 
-4、 线程池获取
+3. 实现Callable  接口 重写call方法
 
+   ```java
+   class MyThread2 implements Callable<String> {
+       @Override
+       public String call() throws Exception {
+           System.out.println("MyThread2 run --------");
+           return "2000";
+       }
+   }
+   //FutureTask类，他实现了Runnable接口，并且还需要传递一个实现Callable接口的类作为构造函数
+   FutureTask futureTask = new FutureTask(new MyThread2());
+   Thread t2 = new Thread(futureTask, "t2");
+   t2.start();
+   ```
 
+4. 线程池获取
 
 ## Callable接口
 
- 
+ ![image-20220509104844490](Java高并发编程.assets/image-20220509104844490.png)
 
+```java
 // futureTask.get(); 能够获取call方法返回值  futureTask.get() 会导致主线程阻塞，推荐放到最后去做
 Object o = futureTask.get();
 System.out.println(o);
@@ -682,9 +678,9 @@ while(!futureTask.isDone()) {
 // 多个线程执行 一个FutureTask的时候，只会计算一次
 FutureTask<Integer> futureTask = new FutureTask<>(new MyThread2());
 // 开启两个线程计算futureTask  只会计算一次,call方法执行一次 ，后续直接返回call方法的返回值
-	new Thread(futureTask, "AAA").start();
-	new Thread(futureTask, "BBB").start();
-	如果我们要两个线程同时计算任务的话，那么需要这样写，需要定义两个futureTask
+new Thread(futureTask, "AAA").start();
+new Thread(futureTask, "BBB").start();
+//如果我们要两个线程同时计算任务的话，那么需要这样写，需要定义两个futureTask
 FutureTask<Integer> futureTask = new FutureTask<>(new MyThread2());
 FutureTask<Integer> futureTask2 = new FutureTask<>(new MyThread2());
 
@@ -692,45 +688,58 @@ FutureTask<Integer> futureTask2 = new FutureTask<>(new MyThread2());
 new Thread(futureTask, "AAA").start();
 
 new Thread(futureTask2, "BBB").start();
+```
 
-## 线程池
+## ThreadPoolExecutor 线程池
 
-ThreadPoolExecutor
+### 作用
 
-线程池做的主要工作就是控制运行的线程的数量，处理过程中，将任务放入到队列中，然后线程创建后，启动这些任务，如果线程数量超过了最大数量的线程排队等候，等其它线程执行完毕，再从队列中取出任务来执行。
+​		**线程池做的主要工作就是控制运行的线程的数量**，处理过程中，将任务放入到队列中，然后线程创建后，启动这些任务，如果线程数量超过了最大数量的线程排队等候，等其它线程执行完毕，再从队列中取出任务来执行。
 
-它的主要特点为：线程复用、控制最大并发数、管理线程
+​		**它的主要特点为：线程复用、控制最大并发数、管理线程**
 
-### 优缺点
+### 优点
 
-线程池做的主要工作就是控制运行的线程的数量，处理过程中，将任务放入到队列中，然后线程创建后，启动这些任务，如果线程数量超过了最大数量的线程排队等候，等其它线程执行完毕，再从队列中取出任务来执行。
+​		线程池中的**任务是放入到阻塞队列**中的，因此使用多线程有下列的好处
 
-它的主要特点为：线程复用、控制最大并发数、管理线程
+- 降低资源消耗
 
-线程池中的任务是放入到阻塞队列中的
+  ​		通过重复利用已创建的线程，降低线程创建和销毁造成的消耗
 
-因此使用多线程有下列的好处
+- 提高响应速度
 
-- 降低资源消耗。通过重复利用已创建的线程，降低线程创建和销毁造成的消耗
-- 提高响应速度。当任务到达时，任务可以不需要等到线程创建就立即执行
-- 提高线程的可管理性。线程是稀缺资源，如果无线创建，不仅会消耗系统资源，还会降低系统的稳定性，使用线程池可以进行统一的分配，调优和监控
+  ​		当任务到达时，任务可以不需要等到线程创建就立即执行
 
-### 常用方法
+- 提高线程的可管理性。
 
-1. newFixedThreadPool
+  ​		线程是稀缺资源，如果无线创建，不仅会消耗系统资源，还会降低系统的稳定性，使用线程池可以进行统一的分配，调优和监控
+
+### Executors获取线程池
+
+#### newFixedThreadPool
+
+​		创建一个可重用固定线程数的线程池，以共享的无界队列方式来运行这些线程
+
+```java
 // 一池5个处理线程（用池化技术，一定要记得关闭）  用途： 执行长期任务
 ExecutorService threadPool = Executors.newFixedThreadPool(5);
 new ThreadPoolExecutor(nThreads, nThreads,
-                              0L, TimeUnit.MILLISECONDS,
-                              new LinkedBlockingQueue<Runnable>());
+                           0L, TimeUnit.MILLISECONDS,
+                           new LinkedBlockingQueue<Runnable>());
 核心线程5
 最大线程5
 空闲线程立即关闭
 任务队列是 Integer.MAX_VALUE
 拒绝策略和线程工厂都是默认的
-结论：等待任务队列过大  堆积大量请求，导致OOM
+```
 
-2.newSingleThreadExecutor
+**结论：等待任务队列过大  堆积大量请求，导致OOM**
+
+#### newSingleThreadExecutor
+
+**创建一个使用单个 worker 线程的 Executor，以无界队列方式来运行该线程**
+
+```java
 // 创建一个只有一个线程的线程池   用途： 一个一个执行的场景
 ExecutorService threadPool2 = Executors.newSingleThreadExecutor();
 return new FinalizableDelegatedExecutorService
@@ -743,22 +752,39 @@ return new FinalizableDelegatedExecutorService
 空闲线程立即关闭
 任务队列是 Integer.MAX_VALUE
 拒绝策略和线程工厂都是默认的
+
+```
+
 结论：等待任务队列过大  堆积大量请求，导致OOM
-3. newCachedThreadPool
+
+#### newCachedThreadPool
+
+```java
 // 创建一个拥有N个线程的线程池，根据调度创建合适的线程   用途 短期异步小程序 或者 负载轻的服务器
 ExecutorService threadPool3 = Executors.newCachedThreadPool();
 return new ThreadPoolExecutor(0, Integer.MAX_VALUE,
-                              60L, TimeUnit.SECONDS,
-                              new SynchronousQueue<Runnable>());
+                           60L, TimeUnit.SECONDS,
+                           new SynchronousQueue<Runnable>());
 核心线程0 
 最大线程 Integer.MAX_VALUE
 空闲线程60s 关闭
 任务队列 1
 拒绝策略和线程工厂都是默认的
+```
+
 结论：最大线程过大，占用资源太多，会创建过多的线程  导致OOM
 
 ### 七个参数
 
+1. **corePoolSize**   			核心线程数，线程池中的常驻核心线程数
+2. **maximumPoolSize**     线程池能够容纳同时执行的最大线程数
+3. **keepAliveTime**           多余的空闲线程存活时间
+4. **unit**                               keepAliveTime的单位
+5. **workQueue**                 任务队列，被提交的但未被执行的任务
+6. threadFactory            表示生成线程池中工作线程的线程工厂，用于创建线程池 默认即可
+7. handler                       拒绝策略
+
+```java
 public ThreadPoolExecutor(int corePoolSize,
                           int maximumPoolSize,
                           long keepAliveTime,
@@ -776,3 +802,370 @@ public ThreadPoolExecutor(int corePoolSize,   	//核心线程数，线程池中�
                           ThreadFactory threadFactory,	//表示生成线程池中工作线程的线程工厂，用于创建线程池 默认即可
                           RejectedExecutionHandler handler //拒绝策略
 ) 
+```
+
+### 线程池的工作原理
+
+#### 流程
+
+![image-20220509110305127](Java高并发编程.assets/image-20220509110305127.png)
+
+1. 在创建了线程池后，等待提交过来的任务请求
+
+2. 当调用execute()方法添加一个请求任务时，线程池会做出如下判断
+
+   1. 如果正在运行的线程池数量小于corePoolSize，那么马上创建线程运行这个任务
+   2. 如果正在运行的线程数量大于或等于corePoolSize，那么将这个任务放入队列
+   3. 如果这时候队列满了，并且正在运行的线程数量还小于maximumPoolSize，那么还是创建非核心线程like运行这个任务；
+   4. 如果队列满了并且正在运行的线程数量大于或等于maximumPoolSize，那么线程池会启动饱和拒绝策略来执行
+
+3. 当一个线程完成任务时，它会从队列中取下一个任务来执行
+
+4. 当一个线程无事可做操作一定的时间(keepAliveTime)时，线程池会判断：
+
+   1. 如果当前运行的线程数大于corePoolSize，那么这个线程就被停掉
+   2. 所以线程池的所有任务完成后，它会最终收缩到corePoolSize的大小
+
+#### **以顾客去银行办理业务为例，谈谈线程池的底层工作原理**
+
+1. 最开始假设来了两个顾客，因为corePoolSize为2，因此这两个顾客直接能够去窗口办理
+2. 后面又来了三个顾客，因为corePool已经被顾客占用了，因此只有去候客区，也就是阻塞队列中等待
+3. 后面的人又陆陆续续来了，候客区可能不够用了，因此需要申请增加处理请求的窗口，这里的窗口指的是线程池中的线程数，以此来解决线程不够用的问题
+4. 假设受理窗口已经达到最大数，并且请求数还是不断递增，此时候客区和线程池都已经满了，为了防止大量请求冲垮线程池，已经需要开启拒绝策略
+5. 临时增加的线程会因为超过了最大存活时间，就会销毁，最后从最大数削减到核心数
+
+### 拒绝策略
+
+- AbortPolicy：中止策略 
+	默认，直接抛出RejectedExcutionException异常，阻止系统正常运行
+- DiscardPolicy：丢弃策略 
+	 直接丢弃任务，不予任何处理也不抛出异常，如果运行任务丢失，这是一种好方案
+- CallerRunsPolicy：调用者运行策略  
+	 该策略既不会抛弃任务，也不会抛出异常，而是将某些任务回退到调用者
+- DiscardOldestPolicy：丢弃最古老的策略  
+	抛弃队列中等待最久的任务，然后把当前任务加入队列中尝试再次提交当前任务
+
+### 自定义线程池
+
+​	生产环境中如何配置 corePoolSize 和 maximumPoolSize，这个是根据具体业务来配置的，分为CPU密集型和IO密集型
+
+- CPU密集型
+  - CPU密集的意思是该任务需要大量的运算，而没有阻塞，CPU一直全速运行，
+  - CPU密集任务只有在真正的多核CPU上才可能得到加速（通过多线程），而在单核CPU上，无论你开几个模拟的多线程该任务都不可能得到加速，因为CPU总的运算能力就那些
+  - CPU密集型任务配置尽可能少的线程数量：一般公式：CPU核数 + 1个线程数
+
+- IO密集型
+  - IO密集型，即该任务需要大量的IO操作，即大量的阻塞
+  - 在单线程上运行IO密集型的任务会导致浪费大量的CPU运算能力花费在等待上，所以IO密集型任务中使用多线程可以大大的加速程序的运行，即使在单核CPU上，这种加速主要就是利用了被浪费掉的阻塞时间。
+  - IO密集时，大部分线程都被阻塞，故需要多配置线程数：
+    - 参考公式：CPU核数 / (1 - 阻塞系数)      阻塞系数在0.8 ~ 0.9左右
+    - 例如：8核CPU：8/ (1 - 0.9) = 80个线程数
+
+# CompletableFuture
+
+## 创建任务
+
+###  **runAsync**    创建没有返回值的任务
+
+```java
+//CompletableFuture.runAsync 创建 没有返回值的任务 1. Runnable  2. Executor 指定线程池 3. get方法得到的是null
+CompletableFuture<Void> voidCompletableFuture = CompletableFuture.runAsync(() -> {
+    System.out.println("当前线程: " + Thread.currentThread().getId());
+    int i = 10 / 2;
+    System.out.println("运行结果: \t" + i);
+}, executorService);
+System.out.println(voidCompletableFuture.get()); 
+```
+
+### **supplyAsync**   创建有返回值的任务
+
+```java
+// CompletableFuture.supplyAsync 创建有返回值的任务  1. 入参Supplier 指定返回值，2 Executor 指定线程池 3. get方法可以得到返回值
+CompletableFuture<Integer> integerCompletableFuture = CompletableFuture.supplyAsync(() -> {
+     System.out.println("当前线程: " + Thread.currentThread().getId());
+     int i = 10 / 2;
+     System.out.println("运行结果: \t" + i);
+     return i;
+}, executorService);
+System.out.println(integerCompletableFuture.get());
+```
+
+## 任务完成后处理
+
+```java
+//Premise： 开启异步任务A
+CompletableFuture<Integer> integerCompletableFuture = CompletableFuture.supplyAsync(() -> {
+    int i = 10 / 2;
+    System.out.println("异步任务A 当前线程: " + Thread.currentThread().getId()+"\t运行结果\t" + i);
+    return i;
+}, executorService);
+
+```
+
+### **whenCompleteAsync** 
+
+**可以感知异步任务A的结果和异常信息，但是没有返回值**
+
+```java
+integerCompletableFuture.whenCompleteAsync((t,u)->{
+    System.out.println("异步任务A完成,结果\t"+ t + "\t异常信息\t"+u+"\t使用其他线程执行B任务");
+    System.out.println("异步任务B当前线程: " + Thread.currentThread().getId());
+}, executorService);
+```
+
+### **exceptionally** 
+
+​	**可以感知异步任务A 异常信息，出现异常时的操作，可以设置返回值**
+
+```java
+integerCompletableFuture.exceptionally((throwable)->{
+    return 10;
+});
+```
+
+### **whenComplete** ||**whenCompleteAsync**  
+
+**可以感知异步任务A的结果和异常信息，但是没有返回值**
+
+```java
+integerCompletableFuture.whenComplete((t,u)->{
+    System.out.println("异步任务A完成,结果\t"+ t + "\t异常信息\t"+u+"\t使用其他线程执行B任务");
+    System.out.println("异步任务B当前线程: " + Thread.currentThread().getId());
+});
+```
+
+###  **handleAsync** || **handle** 
+
+**任务完成后继续处理**
+
+```java
+integerCompletableFuture.handleAsync((result, throwable) -> {
+    System.out.println("异步任务A完成,结果\t" + result + "\t异常信息\t" + throwable + "\t使用其他线程执行B任务");
+    if (result != null) {
+        return result * 2;
+    }
+    if (throwable != null) {
+        return 1;
+    }
+    return 0;
+}, executorService);
+```
+
+1. whenComplete  和 whenCompleteAsync  的区别  handle 和 handleAsync 的区别
+   1. 带Async  需要传入线程池，直接使用线程池的一个空闲线程 执行异步任务B
+   2. 不带Async 使用当前线程（main 线程 或者 异步任务A的线程）执行异步任务B
+
+
+
+## 线程串行化
+
+### **thenRun || thenRunAsync**
+
+**不用接收异步任务A的结果,无返回值.异步任务A结束后,开启异步任务B**
+
+```java
+integerCompletableFuture.thenRunAsync(()->{
+    System.out.println("thenRunAsync:不接收异步任务A的结果,无返回值.异步任务A结束,开启异步任务B 线程\t" +Thread.currentThread().getId());
+},executorService);
+```
+
+### **thenAccept||thenAcceptAsync**:
+
+​	**接收异步任务A的结果,无返回值.异步任务A结束后,开启异步任务B**
+
+```java
+integerCompletableFuture.thenAcceptAsync(res->{
+    System.out.println("thenAcceptAsync:接收异步任务A的结果："+res+"无返回值.异步任务A结束,开启异步任务B 线程\t" +Thread.currentThread().getId());
+}, executorService);
+```
+
+### **thenApply||thenApplyAsync:**
+
+​	**接收异步任务A的结果,有返回值.异步任务A结束后,开启异步任务B**
+
+```java
+integerCompletableFuture.thenApplyAsync(res->{
+    System.out.println("thenApplyAsync:接收异步任务A的结果："+res+"无返回值.异步任务A结束,开启异步任务B 线程\t" +Thread.currentThread().getId());
+    return 100;
+}, executorService);
+```
+
+## 任务组合
+
+### 任务1组合任务2，都执行完成后执行任务3
+
+```java
+//1 runAfterBothAsync 任务3不得到任务1任务2的结果,没有返回值
+future01.runAfterBothAsync(future02, ()->{
+    System.out.println("任务3启动 线程\t" + Thread.currentThread().getId());
+}, executorService);
+//2 thenAcceptBothAsync 任务3能够得到任务1任务2的结果,没有返回值
+future01.thenAcceptBothAsync(future02, (res1,res2)->{
+    System.out.println("任务3启动 线程\t" + Thread.currentThread().getId()+"\t 结果是\t"+res1+"\t"+res2);
+}, executorService);
+//3 thenCombineAsync 任务3能够得到任务1任务2的结果,有返回值
+CompletableFuture<Integer> future03 = future01.thenCombineAsync(future02, (res1, res2) -> {
+    System.out.println("任务3启动 线程\t" + Thread.currentThread().getId() + "\t 结果是\t" + res1 + "\t" + res2);
+    return 0;
+}, executorService);
+System.out.println(future03.get());
+```
+
+### 任务1 组合任务2, 只要有一个完成就执行任务3
+
+```java
+//1 runAfterEitherAsync 无法得到任务1任务2的返回结果,无返回值
+future01.runAfterEitherAsync(future02, ()->{
+    System.out.println("任务3开始");
+}, executorService);
+//2 acceptEitherAsync 得到任务1和2中执行的快的任务的结果,无返回值
+future01.acceptEitherAsync(future02, (x)->{
+    System.out.println("任务3开始"+x);
+}, executorService);
+//3 applyToEitherAsync 得到任务1和2中执行的快的任务的结果,有返回值
+CompletableFuture<String> future3 = future01.applyToEitherAsync(future02, (res) -> {
+    System.out.println("任务3开始" + res);
+    return "任务3" + res;
+}, executorService);
+System.out.println(future3.get());
+```
+
+### 多个任务组合，全部完成执行下一个任务
+
+```java
+// 多个任务组合 allOf.get会阻塞等待所有异步任务完成
+CompletableFuture<Void> future = CompletableFuture.allOf(future01, future02, future03, future04, future05);
+future.get();
+//多个任务组合，任意一个完成执行下一个任务
+// 多个任务组合  anyOf.get阻塞等待一个异步任务完成，get返回第一个完成的异步任务的返回值
+CompletableFuture<Object> anyOf = CompletableFuture.anyOf(future01, future02, future03, future04, future05);
+anyOf.get();
+```
+
+# Fork/Join
+
+​		Fork/Join 它可以将一个大的任务拆分成多个子任务进行并行处理，最后将子任务结果合并成最后的计算结果，并进行输出。Fork/Join 框架要完成两件事情：
+
+- Fork：把一个复杂任务进行分拆，大事化小
+- Join：把分拆任务的结果进行合并
+
+**任务分割**：首先 Fork/Join 框架需要把大的任务分割成足够小的子任务，如果子任务比较大的话还要对子任务进行继续分割
+
+**执行任务并合并结果**：分割的子任务分别放到双端队列里，然后几个启动线程分别从双端队列里获取任务执行。子任务执行完的结果都放在另外一个队列里，启动一个线程从队列里取数据，然后合并这些数据
+
+## 如何使用
+
+1. 创建ForkJoin 任务。编写类实现 ForkJoinTask 接口，主要有以下方式
+   - 继承RecursiveTask类  用于有返回结果的任务
+   - 继承RecursiveAction：用于没有返回结果的任务
+2. 创建线程池ForkJoinPool ，执行任务
+   - new ForkJoinPool().submit(task)
+
+## Fork
+
+​		当我们调用 ForkJoinTask 的 fork 方法时，程序会把任务放在 ForkJoinWorkerThread 的 pushTask 的 **workQueue** 中，异步地
+
+执行这个任务，然后立即返回结果
+
+## Join
+
+Join 方法的主要作用是阻塞当前线程并等待获取结果
+
+```java
+public final V join() {
+ int s;
+ if ((s = doJoin() & DONE_MASK) != NORMAL)
+ 	reportException(s);
+ 	return getRawResult();
+ }
+```
+
+首先调用 doJoin 方法，通过 doJoin()方法得到当前任务的状态来判断返回什么结果，任务状态有 4 种：
+
+- 已完成（NORMAL）、被取消（CANCELLED）、信号（SIGNAL）和出现异常（EXCEPTIONAL）
+
+在 doJoin()方法流程如下:
+
+1. 首先通过查看任务的状态，看任务是否已经执行完成，如果执行完成，则直接返回任务状态；
+2. 如果没有执行完，则从任务数组里取出任务并执行。
+3. 如果任务顺利执行完成，则设置任务状态为 NORMAL
+4. 如果出现异常，则记录异常，并将任务状态设置为 EXCEPTIONAL。
+
+## 案例
+
+**生成一个计算任务，计算 1+2+3 ........+1000**,**每 100 个数切分一个子任务**
+
+```java
+/**
+* 递归累加
+*/
+public class TaskExample extends RecursiveTask<Long> 
+{
+    private int start;
+    private int end;
+    private long sum;
+    /**
+    * 构造函数
+    * @param start
+    * @param end
+    */
+    public TaskExample(int start, int end){
+        this.start = start;
+        this.end = end; 
+    }
+    /**
+    * The main computation performed by this task.
+    ** @return the result of the computation
+    */
+    @Override
+    protected Long compute() {
+        System.out.println("任务" + start + "=========" + end + "累加开始");
+        //大于 100 个数相加切分,小于直接加
+        if(end - start <= 100){
+            for (int i = start; i <= end; i++) {
+                //累加
+                sum += i; 
+            } 
+        }else {
+            //切分为 2 块
+            int middle = start + 100;
+            //递归调用,切分为 2 个小任务
+            TaskExample taskExample1 = new TaskExample(start, middle);
+            TaskExample taskExample2 = new TaskExample(middle + 1, end);
+            //执行:异步
+            taskExample1.fork();
+            taskExample2.fork();
+            //同步阻塞获取执行结果
+            sum = taskExample1.join() + taskExample2.join();
+    	}
+        //加完返回
+        return sum; 
+    } 
+}
+```
+
+```java
+public class ForkJoinPoolDemo {
+    /**
+    * 生成一个计算任务，计算 1+2+3 ........+1000
+    * @param args
+    */
+    public static void main(String[] args) {
+        //定义任务
+        TaskExample taskExample = new TaskExample(1, 1000);
+        //定义执行对象
+        ForkJoinPool forkJoinPool = new ForkJoinPool();
+        //加入任务执行
+        ForkJoinTask<Long> result = forkJoinPool.submit(taskExample);
+        //输出结果
+        try {
+            System.out.println(result.get());
+        }catch (Exception e){ 
+            e.printStackTrace();
+        }finally {
+            forkJoinPool.shutdown();
+        } 
+    }
+}
+```
+
