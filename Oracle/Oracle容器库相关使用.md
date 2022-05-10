@@ -33,5 +33,4 @@ commit;
 1. 查询所有表
 select * from user_tables;
 
-
 ```
