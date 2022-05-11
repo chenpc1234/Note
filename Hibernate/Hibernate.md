@@ -1,6 +1,10 @@
 # Hibernate
 
+​			Hibernate是一个全自动的orm框架，hibernate可以自动生成SQL语句，自动执行，使得Java程序员可以随心所欲的使用对象编程思维来操纵数据库。
+
 ## hibernate-mapping
+
+​	数据库表对应实体类的映射文件
 
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
