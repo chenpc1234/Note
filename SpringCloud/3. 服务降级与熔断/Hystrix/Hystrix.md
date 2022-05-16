@@ -1,3 +1,8 @@
+# 参考
+
+- 代码地址：[chenpc1234/SpringCloud (github.com)](https://github.com/chenpc1234/SpringCloud)
+- 参考资料：[尚硅谷SpringCloud框架开发教程(SpringCloudAlibaba微服务分布式架构丨Spring Cloud)_哔哩哔哩_bilibili](https://www.bilibili.com/video/BV18E411x7eT?spm_id_from=333.337.search-card.all.click)
+
 # 服务雪崩
 
 ​			多个微服务之间调用的时候，假设微服务A调用微服务B和微服务C，微服务B和微服务C又调用其它的微服务，这就是所谓的“扇出。如果扇出的链路上某个微服务的调用晌应时间过长或者不可用，对微服务A的调用就会占用越来越多的系统资源，进而引起系统崩溃，所谓的“雪崩效应”。
