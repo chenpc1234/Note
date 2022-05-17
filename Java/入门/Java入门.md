@@ -35,6 +35,354 @@
 
 7. 把地址赋给 t
 
+
+
+## XML文件
+
+Extensible markup language（可扩展标记语言）
+由若干元素组成
+例如：xml中<servlet>   称为节点或者元素（element）
+
+```xml
+<?xml version="1.0" encoding="utf=8"?>
+<!DOCTYPE usersdata SYSTEM "aa.dtd">
+<usersdata>
+	<user id="zhangsan">
+		<username>zhangsan
+		This is some arbitrary text <within> a 
+		</username>
+		<userage>20</userage>
+		<usersex>男</usersex>
+		<userpwd>admin</userpwd>
+		<userbirth>1998-05-01</userbirth>
+	</user>
+</usersdata>
+```
+
+### Xml约束文件
+
+约束文件决定了，当前这个xml文件中可以命令含有什么样的元素，属性，以及内容。
+
+DTD
+
+```tex
+表示数量：
+	*：0~无穷
+	+：1~无穷
+	？：0 or 1
+CDATA： 
+			任意字符+任意符号。？？
+#PCDATA
+			表示标签内可以有数据 也可以没有数据
+<!ELEMENT XXX (AAA,BBB)>
+			在xxx这个元素下只能含有AAA元素1次和BBB这个元素一次，并且顺序不能颠倒。
+<!ELEMENT XXX (AAA* , BBB)>
+			在xxx这个元素下可以有AAA元素0次或者多次
+<!ATTLIST 元素名称   属性的名称 属性的类型 属性的选项  
+		          属性的名称 属性的类型 属性的选项 
+		          ······		>
+#REQUIRED：
+			必填的
+#IMPLIED：
+			选填的
+NMTOKEN：
+			字母，数字，. - _ :  不能以：开头
+NMTOKENS: NMTOKEN+空格
+ID：
+			表示这个属性的值在整个xml文件中不允许有重复的。且ID的值必须以字母开头
+IDREF：
+			表示这儿属性的值需要参照其他节点中有属性被ID所修饰的值。
+IDREFS：
+			如果这个属性别这个关键字所修饰，表示这个属性的值可以填写多个，但是每个必须要来源于被ID所修饰的属性的值。
+true ( yes | no )：
+			表示true这个属性的值 只是能是yes or no
+true ( yes | no ) "yes"： 
+		""内的内容表示将会作为这个属性的默认值。
+EMPTY：
+		修饰元素，如果元素被EMPTY所修饰，表示这个元素中不能含有内容。
+```
+
+### Xpath
+
+```tex
+/  :  	定位元素，表示到一个元素的绝对路径
+//   :	则表示选择文档中所有满足双斜线//之后规则的元素(无论层级关系)
+*   ： 	全部，表示选择所有由星号之前的路径所定位的元素
+//x[last()] :	表示获取这一组元素的最后元素
+//@id：	选择所有的id属性
+// xx[@id] :	选择有id属性的xx元素
+//xx[@id='a']: 	选择所有的含有id属性 切id为a的xx元素
+//xx[normalize-space(@id)='a']：	选择所有的含有id属性 并且id去掉首位空格后为a的xx元素
+//*[count(xx)=3]：	选择含有3个xx元素的元素
+//*[count(*)=3]：	选择含有3个子元素的元素
+//*[name()='BBB']：	name函数表示获取元素名称 等于//BBB
+//*[starts-with(name(),'B')]：	获取以什么开头的元素
+//*[contains(name(),'C')]：	获取元素名称中包含该字符的元素
+//*[string-length(name()) = 3] ：	通过元素名称的长度来获取元素  =  < >都行。应该用&lt代替<，&gt代替>  因为会影响到标签
+//CCC | //BBB：		| 表示合并
+
+轴： （所有的*可换成指定元素）
+child::          表示去所有的子元素 ，没啥用，和不写一样
+descendant::*	取所有的后代元素，不包括本节点
+//DDD/parent::*	选择DDD元素的所有父节点
+//FFF/ancestor::*	获取FF的祖先元素
+following-sibling::*	取后兄弟元素
+preceding-sibling::*	取前兄弟元素
+descendant-or-self::*	获取所有的后代元素并且包含自己
+ancestor-or-self::*	获取所有的祖先元素并且包含自己
+self::*			表示自己
+//BBB[position() mod 2 = 0 ]	选择偶数位置的BBB元素，从1开始
+//BBB[ position() = floor(last() div 2 + 0.5) or position() = ceiling(last() div 2 + 0.5) ]
+选择中间的BBB元素，可能是一个，也可能是两个。
+```
+
+### Xml解析
+
+#### DOM
+
+```java
+try {
+		// 1.创建XML文档解析器
+			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+		//2..创建一个File对象指向你需要解析的xml文件
+			File xmlFile = new File("catalog.xml");//添加绝对路径
+		//3.将文件交给解析器进行解析
+			// .创建 DocumentBuilder(DOM方式在JDK中的解析器对象)
+			DocumentBuilder builder = factory.newDocumentBuilder();
+			// 解析XML文檔，這樣XML文檔就會加載到內存中，形成樹狀結構
+			Document document = builder.parse(xmlFile);
+		//4.处理解析结果
+			// 获取根节点
+			Element rootElement = document.getDocumentElement();
+			System.out.println("Root Element is: " + rootElement.getTagName());
+			//调用自定义的方法
+			visitNode(null, rootElement);
+
+		} catch (SAXException e) {
+			System.out.println(e.getMessage());
+
+		} catch (ParserConfigurationException e) {
+			System.out.println(e.getMessage());
+
+		} catch (IOException e) {
+			System.out.println(e.getMessage());
+		}
+	}
+		/*Element previousNode,  父节点 Element visitNode 本节点*/
+	public static void visitNode(Element previousNode, Element visitNode) {
+		if (previousNode != null) {
+			System.out.println("Element " + previousNode.getTagName()+ " has element:");
+		}
+		System.out.println("Element Name: " + visitNode.getTagName());
+		//hasAttributes返回此节点（如果它是一个元素）是否具有任何属性
+		if (visitNode.hasAttributes()) {
+				//getTagName() 元素的名称
+			System.out.println("Element " + visitNode.getTagName()+ " has attributes: ");
+			//NamedNodeMap getAttributes();包含此节点的属性的 NamedNodeMap（如果它是 Element）；否则为 null。 
+			NamedNodeMap attributes = visitNode.getAttributes();
+			for (int j = 0; j < attributes.getLength(); j++) {
+				//Attr 接口表示 Element 对象中的属性
+				Attr attribute = (Attr) (attributes.item(j));
+					//getName 属性的名字 getValue属性的值
+				System.out.println("Attribute:" + attribute.getName()+ " with value " + attribute.getValue());
+			}
+		}
+		//getChildNodes包含此节点的所有子节点的 NodeList
+		NodeList nodeList = visitNode.getChildNodes();
+		for (int i = 0; i < nodeList.getLength(); i++) {
+			//Node表示该文档树中的单个节点
+			Node node = nodeList.item(i);
+			//判断 节点的类型为元素Element还是 Text 节点
+			if (node.getNodeType() == Node.ELEMENT_NODE) {
+				Element element = (Element) node;
+				//递归调用
+				visitNode(visitNode, element);
+			} else if (node.getNodeType() == Node.TEXT_NODE) {
+				String str = node.getNodeValue().trim();
+				if (str.length() > 0) {
+					System.out.println("Element Text: " + str);
+				}
+			}
+		}
+	}
+
+```
+
+#### SAX
+
+```java
+public void parseDocument() {
+		try {
+			// 创建SAX解析器工厂对象
+			SAXParserFactory factory = SAXParserFactory.newInstance();
+			SAXParser saxParser = factory.newSAXParser();
+			//DefaultHandler  SAX2 事件处理程序的默认基类 
+			DefaultHandler handler = new CustomSAXHandler();
+  			//parse()使用指定的 DefaultHandler 将指定xml解析 。
+			saxParser.parse(new File("catalog.xml"), handler);
+			CustomSAXHandler h = (CustomSAXHandler) handler;
+			//得到list集合，处理结果集
+			List list = h.getList();
+			for (int i = 0; i < list.size(); i++) {
+				Journal j = (Journal) list.get(i);
+				Article a = j.getArticle();
+				System.out.print("<<<<<<" + a.getAuthor() + "\t");
+				System.out.println("<<<<<<" + a.getTitle());
+			}
+		} catch (SAXException e) {
+		} catch (ParserConfigurationException e) {
+		} catch (IOException e) {
+		}
+	}
+
+	private class CustomSAXHandler extends DefaultHandler {
+		private List list;
+		private Journal j;
+		private Article a;
+		private boolean flag;
+		public List getList() {
+			return this.list;
+		}
+		public CustomSAXHandler() {
+		}
+		public void startDocument() throws SAXException {
+			System.out.println("Event Type: Start Document");
+		}
+		public void startElement(String uri, String localName, String qName,
+				Attributes attributes) throws SAXException {
+			/*
+			 * System.out.println("Event Type: Start Element");
+			 * System.out.println("Element Name:" + qName); for (int i = 0; i <
+			 * attributes.getLength(); i++) { System.out.println("Attribute
+			 * Name:" + attributes.getQName(i)); System.out.println("Attribute
+			 * Value:" + attributes.getValue(i)); }
+			 */
+			if ("catalog".equals(qName)) {
+				list = new ArrayList();
+				for (int i = 0; i < attributes.getLength(); i++) {
+					System.out.println("Name:" + attributes.getQName(i) + "\t"
+							+ "value:" + attributes.getValue(i));
+				}
+			}
+			if ("journal".equals(qName)) {
+				j = new Journal();
+			}
+			if ("article".equals(qName)) {
+				a = new Article();
+			}
+			if ("title".equals(qName)) {
+				flag = true;
+			}
+
+		}
+
+		public void endElement(String uri, String localName, String qName)
+				throws SAXException {
+			// System.out.println("Event Type: End Element");
+			if ("title".equals(qName))
+				flag = false;
+			if ("journal".equals(qName)) {
+				j.setArticle(a);
+				list.add(j);
+			}
+		}
+
+		public void characters(char[] ch, int start, int length)
+				throws SAXException {
+			// System.out.println(ch);
+			// System.out.println("Event Type: Text");
+			String str = new String(ch, start, length).trim();
+			// System.out.println(str);
+			if (a != null && str != null && str.length() > 0) {
+				if (flag)
+					a.setTitle(str);
+				else
+					a.setAuthor(str);
+			}
+		}
+
+		public void error(SAXParseException e) throws SAXException {
+			System.out.println("Error: " + e.getMessage());
+		}
+
+		public void fatalError(SAXParseException e) throws SAXException {
+			System.out.println("Fatal Error: " + e.getMessage());
+		}
+
+		public void warning(SAXParseException e) throws SAXException {
+			System.out.println("Warning: " + e.getMessage());
+		}
+	}
+
+}
+
+```
+
+#### STAX
+
+```java
+public class StAXParser {
+	public void parseXMLDocument() {
+		try {
+			// STAX解析器工厂对象
+			XMLInputFactory inputFactory = XMLInputFactory.newInstance();
+			//获取要解析的xml的流对象
+			InputStream input = new FileInputStream(new File("catalog.xml"));
+			//用一个io的inputstream创建一个XMLStreamReader
+			XMLStreamReader xmlStreamReader = inputFactory.createXMLStreamReader(input);
+			//循环判断是否有更多的解析式件
+			while (xmlStreamReader.hasNext()) {
+
+				int event = xmlStreamReader.next();
+				//开始文档
+				if (event == XMLStreamConstants.START_DOCUMENT) {
+					System.out.println("Event Type:START_DOCUMENT");
+				}
+				//开始元素
+				if (event == XMLStreamConstants.START_ELEMENT) {
+					System.out.println("Event Type: START_ELEMENT");
+							//getLocalName返回当前元素的名称
+					System.out.println("Element Local Name:"+ xmlStreamReader.getLocalName());
+							//getAttributeCount()返回属性的个数 遍历得到所有的属性
+					for (int i = 0; i < xmlStreamReader.getAttributeCount(); i++) {
+						System.out.println("Attribute Local Name:"+ xmlStreamReader.getAttributeLocalName(i));
+						System.out.println("Attribute Value:"+ xmlStreamReader.getAttributeValue(i));
+					}
+				}
+				//文本
+				if (event == XMLStreamConstants.CHARACTERS) {
+					System.out.println("Event Type: CHARACTERS");
+					//去掉左右空格后的文本
+					String str = xmlStreamReader.getText().trim();
+					//如果不为空，处理得到的文本
+					if (str != null && str.length() > 0)
+						System.out.println("Text:" + xmlStreamReader.getText());
+				}
+				//文档结束标签
+				if (event == XMLStreamConstants.END_DOCUMENT) {
+					System.out.println("Event Type:END_DOCUMENT");
+				}
+				//元素结束标签
+				if (event == XMLStreamConstants.END_ELEMENT) {
+					System.out.println("Event Type: END_ELEMENT");
+				}
+
+			}
+		} catch (FactoryConfigurationError e) {
+			System.out.println("FactoryConfigurationError" + e.getMessage());
+		} catch (XMLStreamException e) {
+			System.out.println("XMLStreamException" + e.getMessage());
+		} catch (IOException e) {
+			System.out.println("IOException" + e.getMessage());
+		}
+
+	}
+}
+
+```
+
+
+
 ## Servlet
 
 ​		tomcat目录下的lib下servlet的jar包内 有servlet.class 这是一个接口，GenericServlet是一个抽象类,实现了servlet接口。
