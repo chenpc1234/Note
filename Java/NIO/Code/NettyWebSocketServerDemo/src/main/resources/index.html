@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Welcome to WebSocket Echo Server!</title>
+    <style>
+        body {
+            width: 35em;
+            margin: 0 auto;
+            font-family: Tahoma, Verdana, Arial, sans-serif;
+        }
+
+    </style>
+</head>
+<body>
+<h1>WebSocket Echo Server!</h1>
+<p>If you see this page, the WebSocket Echo Server is successfully opened.</p>
+<form onsubmit="return false;">
+    <input type="text" name="message" value="请输入发送内容"/>
+    <input type="button" value="通过WebSocket发送" onclick="send(this.form.message.value)"/>
+    <h3>Output</h3>
+    <textarea id="responseText" style="width:500px;height:300px;"></textarea>
+</form>
+<p>For online documentation and support please refer to
+    <a href="https://www.cnblogs.com/crazymakercircle/p/9904544.html">疯狂创客圈</a>.<br/>
+
+<p><em>Thank you for flying WebSocket Echo Server.</em></p>
+</body>
+<script type="text/javascript">
+    var socket;
+    if (!window.WebSocket) {
+        window.WebSocket = window.MozWebSocket;
+    }
+    //var domain="192.168.0.5:18899";
+    var domain = window.location.host;
+    //alert(domain)
+    if (window.WebSocket) {
+        //建立WebSocket连接
+        socket = new WebSocket("ws://"+domain+"/ws","echo");
+        socket.onmessage = function (event) {
+            var ta = document.getElementById('responseText');
+            ta.value = ta.value + '\n' + event.data
+        };
+         //连接打开事件
+       socket.onopen = function (event) {
+            var target = document.getElementById('responseText');
+            target.value = "Web Socket 连接已经开启!";
+        };
+        //连接关闭事件
+        socket.onclose = function (event) {
+            var target = document.getElementById('responseText');
+            target.value = ta.value + "Web Socket 连接已经断开";
+        };
+    } else {
+        alert("Your browser does not support Web Socket.");
+    }
+    //发送WebSocket消息
+    function send(message) {
+        if (!window.WebSocket) {
+            return;
+        }
+        if (socket.readyState == WebSocket.OPEN) {
+            //发送消息
+            socket.send(message);
+        } else {
+            alert("The socket is not open.");
+        }
+    }
+</script>
+</html>
