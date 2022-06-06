@@ -262,11 +262,11 @@ Java NIO一个socket连接使用一个channel表示，Java NIO中有很多通道
 
 ![image-20220527150412925](NIO.assets/image-20220527150412925.png)
 
-#### FileChannel
+#### `FileChannel`
 
 ##### 简介
 
-FileChannel是操作文件的通道，是阻塞模式。
+`FileChannel`是操作文件的通道，是阻塞模式。
 
 ##### 使用
 
@@ -304,36 +304,583 @@ FileChannel是操作文件的通道，是阻塞模式。
 
 ##### 案例
 
+[文件NIO复制案例](https://github.com/chenpc1234/Note/tree/main/Java/NIO/Code/NioDemos/src/main/java/com/crazymakercircle/iodemo/fileDemos)
 
-
-#### SocketChannel&&ServerSocketChannel
+#### `SocketChannel`&&`ServerSocketChannel`
 
 ##### 简介
 
-NIO中的SocketChannel对应OIO的Socket，负责数据传输；  ServerSocketChannel对应ServerSocket 负责连接的监听。都支持阻塞模式和非阻塞模式。
+NIO中的`SocketChannel`对应OIO的Socket，负责数据传输；  `ServerSocketChannel`对应`ServerSocket` 负责连接的监听。都支持阻塞模式和非阻塞模式。
 
-阻塞模式下，SocketChannel的连接、读、写 都是阻塞的，和Socket效率相同。
+阻塞模式下，`SocketChannel`的连接、读、写 都是阻塞的，和Socket效率相同。
 
-非阻塞模式下，SocketChannel是异步、高效的。SocketChannel.configureBlocking(false) 可设置为非阻塞模式。
+非阻塞模式下，`SocketChannel`是异步、高效的。`SocketChannel.configureBlocking(false)` 可设置为非阻塞模式。
+
+##### 使用
+
+- 获取通道
+
+  - 客户端
+
+  ```java
+  // 1、获取通道（channel）
+  SocketChannel socketChannel = SocketChannel.open(address);
+  // 2、切换成非阻塞模式
+  socketChannel.configureBlocking(false);
+  //3. 连接服务器IP/port
+  socketChannel.socket().connect(
+      new InetSocketAddress(NioDemoConfig.SOCKET_SERVER_IP
+                            , NioDemoConfig.SOCKET_SERVER_PORT));
+  //4. 非阻塞模式下使用自旋确认连接到主机
+  while (!socketChannel.finishConnect())
+  {
+      //不断的自旋、等待，或者做一些其他的事情
+  }
+  ```
+
+  - 服务端
+
+  ```java
+  
+  key=selector.selectedKeys().iterator().next();
+  
+  ServerSocketChannel server = (ServerSocketChannel) key.channel(); // key 由选择器就绪列表而来
+  SocketChannel socketChannel = server.accept();
+  if (socketChannel == null) continue;
+  // 客户端新连接，切换为非阻塞模式
+  socketChannel.configureBlocking(false);
+  ```
+
+- 读取通道内的数据
+
+  ```java
+  // 与缓冲区类似
+  socketChannel.read(buffer)
+  ```
+
+- 数据写入通道
+
+  ```java
+  // 与缓冲区类似
+  buffer.flip(); 
+  socketChannel.write(buffer);
+  ```
+
+- 关闭通道
+
+  ```java
+  socketChannel.shutdownOutput(); //终止输出
+  socketChannel.close();//关闭连接
+  ```
+
+##### 案例
+
+[SocketChannel&ServerSocketChannel发送文件及接收文件](https://github.com/chenpc1234/Note/tree/main/Java/NIO/Code/NioDemos/src/main/java/com/crazymakercircle/iodemo/socketDemos)
+
+#### `DatagramChannel`
+
+##### 简介
+
+Java NIO中，使用`DatagramChannel`来进行UDP协议的文件传输。
 
 ##### 使用
 
 - 获取通道
 
   ```java
-  
+  DatagramChannel dChannel = DatagramChannel.open();
+  dChannel.configureBlocking(false);
+  //如果是服务端。绑定监听客户端
+       datagramChannel.bind(new InetSocketAddress(
+                  NioDemoConfig.SOCKET_SERVER_IP
+                  , NioDemoConfig.SOCKET_SERVER_PORT));
   ```
 
-  
+- 读取通道内数据
 
-- 读取通道内的数据
+  ```java
+  datagramChannel.receive(buffer);
+  ```
 
 - 数据写入通道
 
+  ```java
+    buffer.flip();
+  dChannel.send(buffer,
+                      new InetSocketAddress(NioDemoConfig.SOCKET_SERVER_IP
+                              , NioDemoConfig.SOCKET_SERVER_PORT));
+  ```
+
 - 关闭通道
 
-#### DatagramChannel
+  ```java
+   dChannel.close();
+  ```
 
+##### 案例
 
+[Java NIO中使用UDP协议传输数据](https://github.com/chenpc1234/Note/tree/main/Java/NIO/Code/NioDemos/src/main/java/com/crazymakercircle/iodemo/udpDemos)
 
 ### NIO-Selector
+
+#### 选择器
+
+- 选择器的使命是完成IO多路复用，主要工作是通道的注册、监听、事件查询。
+
+- 一个单线程处理一个选择器，一个选择器监控很多通道。
+
+- 通道与选择器的关联通过注册（register）完成。
+
+  - 通道注册
+
+    ```java
+    //通道调用注册方法注册进选择器，selector是选择器实例，ops是监控的IO事件类型
+    Channel.register(selector , ops );
+    ```
+
+  - IO事件类型
+
+    - 可读 `SelectionKey.OP_READ`
+    - 可写 `SelectionKey.OP_WRITE`
+    - 连接 `SelectionKey.OP_CONNECT`
+    - 接收 `SelectionKey.OP_ACCEPT`
+
+#### 使用
+
+1. 获取选择器实例
+
+   ```java
+   // 1、创建一个 Selector选择器
+   Selector selector = Selector.open();
+   ```
+
+   
+
+2. 将通道注册到选择器实例，**通道必须是非阻塞的**
+
+   ```java
+   // 2、获取通道
+   ServerSocketChannel serverSocketChannel = ServerSocketChannel.open();
+   // 3.设置为非阻塞
+   serverSocketChannel.configureBlocking(false);
+   // 4、绑定连接
+   serverSocketChannel.bind(new InetSocketAddress(NioDemoConfig.SOCKET_SERVER_PORT));
+   // 5、将通道注册到选择器上,并注册的IO事件为：“接收新连接”
+   SelectionKey sk = serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT);
+   ```
+
+3. 选择IO就绪事件，使用选择器的select()方法，`selector.selectedKeys()`得到选择键集合，迭代选择键进行判断处理，处理完成后移除选择键
+
+   ```java
+    // 6、轮询感兴趣的I/O就绪事件（选择键集合）
+           while (selector.select() > 0) {
+               // 7、获取选择键集合
+               Iterator<SelectionKey> selectedKeys = selector.selectedKeys().iterator();
+   
+               while (selectedKeys.hasNext()) {
+                   // 8、获取单个的选择键，并处理
+                   SelectionKey selectedKey = selectedKeys.next();
+                   // 9、判断key是具体的什么事件
+                   if (selectedKey.isAcceptable()) {
+               		//IO事件 ServerSocketChannel服务器监听通道有新链接
+                   } else if (selectedKey.isConnectable()) {
+                   	//IO事件 传输通道连接成功
+                   } else if (selectedKey.isReadable()) {
+                   	//IO事件 传输通道可读
+                   } else if (selectedKey.isWritable()) {
+                   	//IO事件 传输通道可写
+                   }
+                   // 10、移除选择键
+                   selectedKeys.remove();
+               }
+           }
+   ```
+
+   
+
+### 实战案例
+
+[SocketChannel接收文件传输](https://github.com/chenpc1234/Note/tree/main/Java/NIO/Code/NioDemos/src/main/java/com/crazymakercircle/iodemo/socketDemos)
+
+```tex
+服务端
+1. 定义保存文件对象 Client {文件名称
+        //长度
+        //开始传输的时间
+        //客户端的地址
+        //输出的文件通道
+        //接收长度
+        }
+2. 定义缓冲区用于读写
+3. 使用Map保存每个客户端传输，当OP_READ通道可读时，根据channel找到对应的对象Map<SelectableChannel, Client>
+
+4. 开启服务
+	4.1 获取Selector选择器
+	4.2 获取通道
+	4.3 设置通道非阻塞
+	4.4 绑定监听的端口
+	4.5 通道注册到选择器上，IO事件为（OP_ACCEPT）即ServerSocketChannel服务器监听通道有新链接
+	4.6 轮询感兴趣的I/O就绪事件（选择键集合）selector.select()，迭代每个选择键
+		4.6.1 接受的事件是“新连接”事件,就获取客户端新连接
+				 	ServerSocketChannel server = (ServerSocketChannel) key.channel();
+                    SocketChannel socketChannel = server.accept();
+                    if (socketChannel == null) continue;
+                    // 客户端新连接，切换为非阻塞模式
+                    socketChannel.configureBlocking(false);
+                    // 将客户端新连接通道注册到selector选择器上
+                    SelectionKey selectionKey =
+                            socketChannel.register(selector, SelectionKey.OP_READ);
+                    // 将新链接保存到map中，用于后续文件读取
+                    Client client = new Client();
+                    client.remoteAddress
+                            = (InetSocketAddress) socketChannel.getRemoteAddress();
+                    clientMap.put(socketChannel, client);
+              
+		4.6.2 若是可读事件，就进行文件读取接收	
+				Client client = clientMap.get(key.channel());
+				SocketChannel socketChannel = (SocketChannel) key.channel();
+				socketChannel.read(buffer) 进行读取到缓冲区
+				FileChannel读取缓冲区文件
+```
+
+
+
+
+
+## Reactor模式
+
+### OIO缺陷
+
+#### **单线程阻塞IO**
+
+原始网络服务器通过while循环不断监听端口是否有新链接，在执行任务时，后续请求会阻塞
+
+导致问题：阻塞导致吞吐量太低，单线程。
+
+```java
+while(true){
+    socket = accept();//阻塞、接收连接
+    handle(socket);//执行任务   -- 执行过程中，会阻塞后续接收连接
+}
+```
+
+<img src="NIO.assets/v2-75fb7db7ee4709d7029d151f333901c9_r.jpg" alt="preview" style="zoom: 67%;" />
+
+#### **多线程阻塞IO**
+
+Connection Per Thread模式： 一个连接一个线程，每个线程处理一个连接
+
+问题：线程太多，消耗资源。线程间的切换影响效率。
+
+```java
+ServerSocket serverSocket =new ServerSocket(8080);
+while(){
+   Socket socket = serverSocket.accept();
+    Handle handle = new Handler(socket); // 使用socket创建专属的处理对象
+    new Thread(handle).start();// 创建新的线程，单独进行处理
+}
+```
+
+<img src="NIO.assets/v2-a2cd3e9ea9d31bc2bdf6d1c8f42b93af_r.jpg" alt="preview" style="zoom:67%;" />
+
+### 单Reactor单线程模式
+
+Reactor反应器模式中有两个重要的组件
+
+- Reactor
+  - 负责IO查询事件，当检测到一个IO事件时，将事件发送给对应的Handler处理
+- Handler
+  - 与IO事件(或者选择键)绑定，非阻塞的处理IO事件，完成连接的建立、通道的读取、业务处理、结果返回(写入通道)。
+
+#### 单Reactor单线程模型
+
+<img src="NIO.assets/31a97cf8b1a664ca5c4468d9b7fee422.png" alt="31a97cf8b1a664ca5c4468d9b7fee422.png" style="zoom:67%;" />
+
+
+
+#### 单Reactor单线程服务端代码模式
+
+```java
+class EchoServerReactor implements Runnable {
+    Selector selector;
+    ServerSocketChannel serverSocket;
+    EchoServerReactor() throws IOException {
+        //开启选择器，打开通道，通道绑定端口，通道设置非阻塞、通道注册进选择器、选择键绑定连接时间处理器
+        selector = Selector.open();
+        serverSocket = ServerSocketChannel.open();
+        InetSocketAddress address =new InetSocketAddress("127.0.0.1","12345");
+        serverSocket.socket().bind(address);
+        serverSocket.configureBlocking(false);
+        SelectionKey sk = serverSocket.register(selector, SelectionKey.OP_ACCEPT);
+        sk.attach(new AcceptorHandler());
+    }
+    
+	public void run() {
+        //轮询选择器
+        while (!Thread.interrupted()) {
+            selector.select();
+            Set<SelectionKey> selected = selector.selectedKeys();
+            Iterator<SelectionKey> it = selected.iterator();
+            //迭代选择键,分发处理
+            while (it.hasNext()) {
+                //Reactor负责dispatch收到的事件
+                SelectionKey sk = it.next();
+                dispatch(sk);
+            }
+            selected.clear();
+        }
+    }
+        
+    //分发处理方法
+    void dispatch(SelectionKey sk) {
+        //调用之前attach绑定到选择键的handler处理器对象
+        Runnable handler = (Runnable) sk.attachment();
+        if (handler != null) {
+            handler.run();
+        }
+    }
+    // Handler:新连接处理器
+    class AcceptorHandler implements Runnable {
+        public void run() {
+            try {
+                //接收连接
+                SocketChannel channel = serverSocket.accept();
+                // 创建业务处理的Handler 进行业务处理
+                if (channel != null){
+                    new IOHandler(selector, channel); 
+                }            
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+}
+```
+
+#### 单线程Reactor缺陷
+
+- 单线程Reactor中，Reactor和Handler都在同一个线程内运行，当某个Handler阻塞时，会导致其他的Handler不能执行。被阻塞的Handler不仅仅负责输入输出处理的传输处理器IOHandler，还包括连接处理器AcceptorHandler，可能导致服务器无响应。
+
+- 单线程无法发挥多核CPU的性能
+
+### 单Reactor多线程模式
+
+<img src="NIO.assets/96b549372553c85d28662136adacb1b5.png" alt="96b549372553c85d28662136adacb1b5.png" style="zoom:67%;" />
+
+#### 单Reactor多线程与单Reactor单线程的区别
+
+- handler只负责响应事件，不做具体的业务处理，通过read读取数据后，会分发给后面的**worker线程池**的某个线程处理业务
+- worker线程池会分发独立的线程完成真正的业务，并将结果返回给handler
+- handler收到响应的结果后，再通过send将结果返回给client
+
+#### 单Reactor多线程的优缺点
+
+- 优点：
+  - 多线程可以充分利用多核CPU的处理能力
+  - 采用线程池复用线程，减少创建和销毁线程带来的性能开销
+
+- 缺点：
+  - reactor处理所有事件的监听和响应，在单线程运行，高并发场景下容易出现性能瓶颈
+  - 多线程数据共享和访问比较复杂
+
+### 主从Reactor多线程模式
+
+<img src="NIO.assets/62741b38ecb8ca499c95eedb5f92034f.png" alt="62741b38ecb8ca499c95eedb5f92034f.png" style="zoom:67%;" />
+
+#### 多线程主从Reactor工作流程
+
+1. Reactor主线程MainReactor对象通过select监听连接事件，收到事件后，通过Acceptor处理连接事件
+2. 当Acceptor处理连接事件后，MainReactor将连接分配给SubReactor
+3. SubReactor将连接加入到连接队列进行监听，并创建handler进行各种事件处理
+4. 当有新事件发生时，SubReactor就会调用对应的handler进行处理
+5. handler通过Read读取数据，分发给后面的worker线程处理
+6. worker线程池会分配独立的worker线程进行业务处理，并返回结果
+7. handler收到响应的结果后，再通过send将结果返回给client
+8. MainReactor主线程可以关联多个SubReactor子线程
+
+#### 多线程主从Reactor优点
+
+- 主线程与子线程的数据交互简单职责明确，主线程只需要接收新连接，子线程完成后续的业务处理
+- 可以通过扩展多个Reactor子线程的方式来减小单个子线程的压力，提高并发处理能力
+
+#### 多线程主从Reactor代码模式
+
+```java
+class MultiThreadEchoServerReactor {
+    ServerSocketChannel serverSocket;
+    AtomicInteger next = new AtomicInteger(0);
+    //selectors集合,引入多个selector选择器
+    Selector[] selectors = new Selector[2];
+    //引入多个子反应器
+    SubReactor[] subReactors = null;
+    //
+    MultiThreadEchoServerReactor() throws IOException {
+        //初始化多个selector选择器
+        selectors[0] = Selector.open();
+        selectors[1] = Selector.open();
+        serverSocket = ServerSocketChannel.open();
+        InetSocketAddress address = new InetSocketAddress(NioDemoConfig.SOCKET_SERVER_IP, NioDemoConfig.SOCKET_SERVER_PORT);
+        serverSocket.socket().bind(address);
+        serverSocket.configureBlocking(false);
+
+        //第一个selector,负责监控新连接事件
+        SelectionKey sk = serverSocket.register(selectors[0], SelectionKey.OP_ACCEPT);
+        //附加新连接处理handler处理器到SelectionKey（选择键）
+        sk.attach(new AcceptorHandler());
+
+        //第一个子反应器，一子反应器负责一个选择器
+        SubReactor subReactor1 = new SubReactor(selectors[0]);
+        //第二个子反应器，一子反应器负责一个选择器
+        SubReactor subReactor2 = new SubReactor(selectors[1]);
+        
+        subReactors = new SubReactor[]{subReactor1, subReactor2};
+    }
+
+    private void startService() {
+        // 一子反应器对应一条线程
+        new Thread(subReactors[0]).start();
+        new Thread(subReactors[1]).start();
+    }
+
+    //反应器
+    class SubReactor implements Runnable {
+        //每条线程负责一个选择器的查询
+        final Selector selector;
+        public SubReactor(Selector selector) {
+            this.selector = selector;
+        }
+        public void run() {
+            try {
+                while (!Thread.interrupted()) {
+                    selector.select();
+                    Set<SelectionKey> keySet = selector.selectedKeys();
+                    Iterator<SelectionKey> it = keySet.iterator();
+                    while (it.hasNext()) {
+                        //Reactor负责dispatch收到的事件
+                        SelectionKey sk = it.next();
+                        dispatch(sk);
+                    }
+                    keySet.clear();
+                }
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+        }
+        void dispatch(SelectionKey sk) {
+            Runnable handler = (Runnable) sk.attachment();
+            //调用之前attach绑定到选择键的handler处理器对象
+            if (handler != null) {
+                handler.run();
+            }
+        }
+    }
+    // Handler:新连接处理器
+    class AcceptorHandler implements Runnable {
+        public void run() {
+            try {
+                SocketChannel channel = serverSocket.accept();
+                if (channel != null)
+                    new MultiThreadEchoHandler(selectors[next.get()], channel);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            if (next.incrementAndGet() == selectors.length) {
+                next.set(0);
+            }
+        }
+    }
+
+    public static void main(String[] args) throws IOException {
+        MultiThreadEchoServerReactor server =
+                new MultiThreadEchoServerReactor();
+        server.startService();
+    }
+}
+
+```
+
+```java
+class MultiThreadEchoHandler implements Runnable {
+    final SocketChannel channel;
+    final SelectionKey sk;
+    final ByteBuffer byteBuffer = ByteBuffer.allocate(1024);
+    static final int RECIEVING = 0, SENDING = 1;
+    int state = RECIEVING;
+    //引入线程池
+    static ExecutorService pool = Executors.newFixedThreadPool(4);
+	// 选择器的selector
+    MultiThreadEchoHandler(Selector selector, SocketChannel c) throws IOException {
+        channel = c;
+        c.configureBlocking(false);
+        //仅仅取得选择键，后设置感兴趣的IO事件
+        sk = channel.register(selector, 0);
+        //将本Handler作为sk选择键的附件，方便事件dispatch
+        sk.attach(this);
+        //向sk选择键注册Read就绪事件
+        sk.interestOps(SelectionKey.OP_READ);
+        selector.wakeup();
+    }
+
+    public void run() {
+        //异步任务，在独立的线程池中执行
+        pool.execute(new AsyncTask());
+    }
+
+    //异步任务，不在Reactor线程中执行
+    public synchronized void asyncRun() {
+        try {
+            if (state == SENDING) {
+                //写入通道
+                channel.write(byteBuffer);
+                //写完后,准备开始从通道读,byteBuffer切换成写模式
+                byteBuffer.clear();
+                //写完后,注册read就绪事件
+                sk.interestOps(SelectionKey.OP_READ);
+                //写完后,进入接收的状态
+                state = RECIEVING;
+            } else if (state == RECIEVING) {
+                //从通道读
+                int length = 0;
+                while ((length = channel.read(byteBuffer)) > 0) {
+                    Logger.info(new String(byteBuffer.array(), 0, length));
+                }
+                //读完后，准备开始写入通道,byteBuffer切换成读模式
+                byteBuffer.flip();
+                //读完后，注册write就绪事件
+                sk.interestOps(SelectionKey.OP_WRITE);
+                //读完后,进入发送的状态
+                state = SENDING;
+            }
+            //处理结束了, 这里不能关闭select key，需要重复使用
+            //sk.cancel();
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    //异步任务的内部类
+    class AsyncTask implements Runnable {
+        public void run() {
+            MultiThreadEchoHandler.this.asyncRun();
+        }
+    }
+
+}
+```
+
+### Reactor优缺点
+
+#### 优点
+
+- 响应快
+  - 不会被单个连接IO操作阻塞
+- 编程简单
+  - 避免了复杂的多线程同步，避免了多线程进程间的切换开销
+- 可扩展
+  - 可以通过反应器线程的个数来充分利用CPU资源
+
+#### 缺点
+
+- 门槛高，不易于调试
+- 依赖系统底层IO多路复用模型
+- 在同一个handle中如果出现一个长时间的数据读写，会影响这个反应器中其他通道的IO处理
