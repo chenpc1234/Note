@@ -25,24 +25,7 @@
 
 总结：web请求，通过一些匹配条件，定位到真正的服务节点。并在这个转发过程的前后，进行一些精细化控制。predicate就是匹配条件，而filter，就可以理解为一个无所不能的拦截器。有了这两个元素，再加上目标URI，就可以实现具体的路由了。
 
-## IO模型
-
-### zuul的IO模型
-
-![image-20220516095427915](Gateway.assets/image-20220516095427915.png)
-
-​		SpringCloud中所集成的Zuul版本，采用的是Tomcat容器，使用的是传统的Servlet IO处理模型，是阻塞式处理模型。
-
-- **servlet由servlet container进行生命周期管理。**
-  - container启动时构造servlet对象并调用servlet init()进行初始化；
-  - container运行时接收请求，并为每个请求分配一个线程（一般从线程池中获取空闲线程）然后调用service()。
-  - container关闭时调用servlet destory()销毁servlet；
-- 弊端：
-  - servlet是一个简单的网络IO模型，当请求进入servlet container时，servlet container就会为其绑定一个线程，在并发不高的场景下这种模型是适用的，但是一旦并发上升，线程数量就会上涨，而线程资源代价是昂贵的（上下文切换，内存消耗大）严重影响请求的处理时间。
-  - 在一些简单的业务场景下，不希望为每个request分配一个线程，只需要1个或几个线程就能应对极大并发的请求，这种业务场景下servlet模型没有优势。
-  - SpringCloud Zuul是基于servlet之上的一个阻塞式处理模型，即Spring实现了处理所有request请求的一个servlet（DispatcherServlet），并由该servleet阻塞式处理。
-
-### Gateway的IO模型
+## Gateway的IO模型
 
 ![image-20220516095513148](Gateway.assets/image-20220516095513148.png)
 
