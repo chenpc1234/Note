@@ -730,3 +730,23 @@ public class MyServlet  extends HttpServlet {
 3. 使用
    	使用StringRedisTemplate 或者 redisTemplate
 
+## 跨域解决
+
+```java
+@Configuration
+public class WebConfig implements WebMvcConfigurer {
+
+    @Override
+    public void addCorsMappings(CorsRegistry registry) {
+        registry.addMapping("/**") // 允许跨域资源的访问定义
+                .allowedOrigins("*") //SpringBoot2.4.0版本之前  允许哪些原始域
+            	.allowedOriginPatterns("*")	// 允许跨域访问的源
+                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")  //允许跨域的请求方法
+                .allowedHeaders("*")  //允许头部设置
+                .exposedHeaders("Access-Control-Allow-Origin")  //暴露哪些头部信息（因为跨域访问默认不能获取全部头部信息）
+                .allowCredentials(true);  // 允许发送Cookie
+
+    }
+}
+```
+
