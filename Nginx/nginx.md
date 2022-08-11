@@ -57,10 +57,10 @@
 - location块：
   - 配置请求的路由，以及各种页面的处理情况。
 
-```tex
+```json
 ############全局块  Begin ###########################
 #user  nobody;
-worker_processes  1;
+worker_processes  1;  #worker 进程数  与CPU核 数一致即可
 #error_log  logs/error.log;
 #error_log  logs/error.log  notice;
 #error_log  logs/error.log  info;
@@ -68,7 +68,9 @@ worker_processes  1;
 ############全局块 End ###########################
 #############events块 Begin ######################
 events {
-    worker_connections  1024;
+	use epoll;  				#使用epoll多路复用模型   select 最大客户端连接数1024  epoll linux内核>2.6
+    worker_connections  1024; 	# 最大连接数限制
+    accept_mutex on;      		#默认on ，各worker加锁获取连接，off会导致惊群
 }
 #############events块 End ######################
 #############http 块 Begin ######################

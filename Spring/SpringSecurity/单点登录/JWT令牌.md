@@ -118,7 +118,7 @@ jti：JWT ID用于标识该JWT
 
 签名哈希部分是对上面两部分数据签名，需要使用base64编码后的header和payload数据，通过指定的算法生成哈希，以确保数据不会被篡改。首先，需要指定一个密钥（secret）。该密码仅仅为保存在服务器中，并且不能向用户公开。然后，使用header中指定的签名算法（默认情况下为HMAC SHA256）根据以下公式生成签名
 $$
-HMACSHA256(base64UrlEncode(header)+"."+base64UrlEncode(payload),secret)
+HMACSHA256(base64UrlEncode(header)+"."+base64UrlEncode(payload),secret)
 $$
 在计算出签名哈希后，JWT头，有效载荷和签名哈希的三个部分组合成一个字符串，每个部分用.分隔，就构成整个JWT对象
 
@@ -133,6 +133,10 @@ $$
    1. 服务端获取header中的加密算法之后，利用该算法加上secretKey对header、payload进行加密，比对加密后的数据和客户端发送过来的是否一致。
    2. 注意secretKey只能保存在服务端，而且对于不同的加密算法其含义有所不同，一般对于MD5类型的摘要加密算法，secretKey实际上代表的是盐值
       
+
+## JWT+Spring Security 那种认证处理流程
+
+
 
 ## java使用jwt
 

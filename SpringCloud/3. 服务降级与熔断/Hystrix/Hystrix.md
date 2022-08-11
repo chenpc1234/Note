@@ -99,7 +99,7 @@ Hystriⅸ能够保证在一个依赖出问题的情况下,不会导致整体服�
             execution:
               isolation:
                 thread:
-                  timeoutInMilliseconds: 5000
+                  timeoutInMil 
       ```
 
 ### 服务降级三种方式
@@ -223,7 +223,7 @@ hystrix:
 
 - 快照时间窗口+请求总数阈值+ 错误百分比阈值，必须3个同时满足才行
 
-  快照时间窗口内调用次数达到*requestVolumeThreshold*  失败率达到*errorThresholdPercentage*
+  快照时间窗口`timeInMilliseconds`内调用次数达到`requestVolumeThreshold` 失败率达到`errorThresholdPercentage`
 
   断路器CLOSE-->OPEN
 
